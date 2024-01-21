@@ -1,0 +1,7 @@
+GET http://localhost:8080/
+content-type: application/json
+
+{
+    "query": "phone",
+    "page": 1
+}
