@@ -31,3 +31,12 @@ content-type: application/json
     "query": 2,
     "page": "1"
 }
+
+###
+GET http://localhost:8080/
+content-type: application/json
+
+{
+    "query": "mac",
+    "page": 1
+}

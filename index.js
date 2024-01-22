@@ -5,6 +5,35 @@ const PORT = 8080;
 
 app.use(express.json());
 
+//Incoming log
+app.use((req, res, next) => {
+  setImmediate(() => {
+    console.log({
+      type: "messageIn",
+      body: req.body,
+      method: req.method,
+      path: req.url.toString(),
+      dateTime: new Date().toLocaleString()
+    });
+  });
+  next();
+});
+
+//Outgoing log
+app.use((req, res, next) => {
+  res.on("finish", () =>{
+    setImmediate(() => {
+      console.log({
+        type: "messageOut",
+        //is res.locals best you can do in this case?
+        body: res.locals.convertedData,
+        dateTime: new Date().toLocaleString()
+      });
+    });
+  });
+  next();
+});
+
 app.get("/", async (req, res, next) => {
   try {
       const { query, page } = req.body;
@@ -25,7 +54,8 @@ app.get("/", async (req, res, next) => {
         
         // Return the transformed data
         const convertedData = returnSpecificJsonData(data)
-        res.send(convertedData);
+        res.locals.convertedData = convertedData;
+        res.json(convertedData);
       }
   
     } catch (error) {
@@ -39,15 +69,17 @@ function returnSpecificJsonData(json_data){
   var specificProductData = [];
   for (let i = 0; i < json_data.products.length; i++) {
     const element = products[i];
+    var final_sum =  (element.price - (element.price * element.discountPercentage / 100)).toFixed(2);
+    var final_price = parseFloat(final_sum);
     specificProductData.push({
-      title: element.title,
-      description: element.description,
-      final_price: (element.price - (element.price * element.discountPercentage / 100)).toFixed(2)
+      "Produkta nosaukums": element.title,
+      "Produkta apraksts": element.description,
+      "Produkta gala cena": final_price
     })
     
   }
-  console.log(specificProductData);
-  var jsonProductData = JSON.stringify(specificProductData);
+  // console.log(specificProductData);
+  var jsonProductData = JSON.parse(JSON.stringify(specificProductData));
   return jsonProductData;
 }
 
