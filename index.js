@@ -23,11 +23,13 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
   res.on("finish", () =>{
     setImmediate(() => {
+      const isError = res.locals.statusCode >= 400;
       console.log({
         type: "messageOut",
         //is res.locals best you can do in this case?
         body: res.locals.convertedData,
-        dateTime: new Date().toLocaleString()
+        dateTime: new Date().toLocaleString(),
+        fault: isError ? res.locals.error : undefined,
       });
     });
   });
@@ -38,16 +40,19 @@ app.get("/", async (req, res, next) => {
   try {
       const { query, page } = req.body;
 
-      const validatedData = validateInputData(req.body)
+      const validatedData = validateInputData(req.body);
       if(validatedData.code !== 200){
+        res.locals.statusCode = validatedData.code;
+        res.locals.error = new Error().stack;
         res.status(validatedData.code).send(validatedData);
       }else{
 
         
         const pageNumber = parseInt(page) || 1;
+        const skippableIndex = pageNumber * 2 - 2; //get the amount to skip, 
         const pageSize = 2;
         
-        const apiUrl = `https://dummyjson.com/products/search?q=${query}&limit=${pageSize}&skip=0`;
+        const apiUrl = `https://dummyjson.com/products/search?q=${query}&limit=${pageSize}&skip=${skippableIndex}`;
         
         const response = await axios.get(apiUrl);
         const data = response.data;
@@ -56,6 +61,7 @@ app.get("/", async (req, res, next) => {
         const convertedData = returnSpecificJsonData(data)
         res.locals.convertedData = convertedData;
         res.json(convertedData);
+        
       }
   
     } catch (error) {
