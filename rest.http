@@ -1,6 +1,7 @@
 ###
-GET http://localhost:8080/
+POST http://localhost:8080/
 content-type: application/json
+Accept: : application/xml
 
 {
     "query": "phone",
@@ -8,35 +9,67 @@ content-type: application/json
 }
 
 ###
-GET http://localhost:8080/
+POST http://localhost:8080/
+Content-Type: application/xml
+Accept: application/xml
+
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<parameters>
+    <query>book</query>
+    <page>2</page>
+</parameters>
+
+###
+POST http://localhost:8080/
+Content-Type: multipart/form-data; boundary=aksopdjasopidjasipodjasdjaspdiaj
+Accept: application/json
+
+--aksopdjasopidjasipodjasdjaspdiaj
+Content-Disposition: form-data; name="query"
+Content-Type: text/plain
+
+mac
+--aksopdjasopidjasipodjasdjaspdiaj
+Content-Disposition: form-data; name="page"
+Content-Type: text/plain
+
+1
+--aksopdjasopidjasipodjasdjaspdiaj--
+
+###
+POST http://localhost:8080/
 content-type: application/json
+Accept: application/json
 
 {
     "query": 2,
     "page": 1
 }
 ###
-GET http://localhost:8080/
+POST http://localhost:8080/
 content-type: application/json
+Accept: application/json
 
 {
     "query": "",
     "page": 1
 }
 ###
-GET http://localhost:8080/
+POST http://localhost:8080/
 content-type: application/json
+Accept: application/json
 
 {
-    "query": 2,
+    "query": "2",
     "page": "1"
 }
 
 ###
-GET http://localhost:8080/
+POST http://localhost:8080/
 content-type: application/json
+Accept: application/xml
 
 {
     "query": "mac",
-    "page": 3
+    "page": 2
 }

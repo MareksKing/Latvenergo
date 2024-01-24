@@ -1,9 +1,18 @@
 const express = require("express");
 const axios = require("axios");
+const bodyParser = require("body-parser");
+require('body-parser-xml')(bodyParser);
+const multer = require("multer");
 const app = express();
 const PORT = 8080;
 
+
 app.use(express.json());
+app.use(bodyParser.json());
+app.use(bodyParser.xml());
+app.use(bodyParser.urlencoded({extended: true}));
+
+const upload = multer();
 
 //Incoming log
 app.use((req, res, next) => {
@@ -26,7 +35,6 @@ app.use((req, res, next) => {
       const isError = res.locals.statusCode >= 400;
       console.log({
         type: "messageOut",
-        //is res.locals best you can do in this case?
         body: res.locals.convertedData,
         dateTime: new Date().toLocaleString(),
         fault: isError ? res.locals.error : undefined,
@@ -36,14 +44,39 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get("/", async (req, res, next) => {
-  try {
-      const { query, page } = req.body;
 
-      const validatedData = validateInputData(req.body);
+
+app.post("/", upload.none(), async (req, res, next) => {
+  try {
+      const contentType = req.get('Content-Type');
+      let request_body;
+
+      if (contentType === 'application/xml') {
+        
+        const jsonData = JSON.parse(JSON.stringify(req.body.parameters));
+        const query = jsonData.query.toString();
+        const page = parseInt(jsonData.page);
+        req.body = {query, page}
+        request_body = req.body;
+
+      } else if (contentType.split(';')[0] === 'multipart/form-data') {
+        const query = req.body.query;
+        const page = parseInt(req.body.page);
+        req.body = {query, page};
+        request_body = req.body;
+      
+      } else if (contentType.split(';')[0] === 'application/json') {
+        request_body = req.body;
+      } else {
+        res.locals.error = new Error().stack;
+        res.status(500).send('Unsupported Media Type');
+        return;
+      }
+
+      const {query, page} = request_body;
+      const validatedData = validateInputData(request_body);
       if(validatedData.code !== 200){
         res.locals.statusCode = validatedData.code;
-        res.locals.error = new Error().stack;
         res.status(validatedData.code).send(validatedData);
       }else{
 
@@ -60,13 +93,20 @@ app.get("/", async (req, res, next) => {
         // Return the transformed data
         const convertedData = returnSpecificJsonData(data)
         res.locals.convertedData = convertedData;
-        res.json(convertedData);
+
+        if(req.get('Accept') === 'application/xml'){
+          var convert = require('xml-js');
+          var options = {compact: true, spaces: 4};      
+          var result = convert.json2xml(convertedData, options);
+          res.send(result);
+        }else{
+          res.json(convertedData);
+        }
         
       }
   
     } catch (error) {
-      // Pass the error to the error-handling middleware
-      next(error);
+      res.locals.error = error
     }
 });
 
@@ -78,9 +118,9 @@ function returnSpecificJsonData(json_data){
     var final_sum =  (element.price - (element.price * element.discountPercentage / 100)).toFixed(2);
     var final_price = parseFloat(final_sum);
     specificProductData.push({
-      "Produkta nosaukums": element.title,
-      "Produkta apraksts": element.description,
-      "Produkta gala cena": final_price
+      title: element.title,
+      description: element.description,
+      final_price: final_price
     })
     
   }
