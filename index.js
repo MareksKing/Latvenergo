@@ -147,4 +147,4 @@ app.post('/', upload.none(), async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`running on http://localhost:${PORT}`));
+module.exports = app;

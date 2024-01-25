@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "./node_modules/.bin/eslint"
+    "test": "jest --testTimeout=5000",
+    "lint": "eslint **/*.js"
   },
   "keywords": [],
   "author": "",
@@ -20,6 +20,7 @@
     "xml-js": "^1.6.11"
   },
   "devDependencies": {
-    "eslint-config-airbnb": "^19.0.4"
+    "eslint-config-airbnb": "^19.0.4",
+    "jest": "^29.7.0"
   }
 }
